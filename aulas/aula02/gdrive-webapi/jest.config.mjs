@@ -27,5 +27,6 @@ export default {
   collectCoverageFrom: [
     "src/**/*.js",
     "!src/**/index.js"
-  ]
+  ],
+  testMatch: ["**/*.(test).js"]
 };
