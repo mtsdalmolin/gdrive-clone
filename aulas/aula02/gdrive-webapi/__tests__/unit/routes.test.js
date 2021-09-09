@@ -1,22 +1,35 @@
-import { describe, test, expect, jest } from '@jest/globals'
-import Routes from '../../src/routes.js'
+import {
+  beforeEach,
+  describe,
+  test,
+  expect,
+  jest
+} from '@jest/globals'
+import routesDefaultParams from '../_fixtures/routesDefaultParams'
+import { logger } from '../../src/logger'
+import Routes from '../../src/routes'
+import UploadHandler from '../../src/uploadHandler'
+import TestUtils from '../_utils/testUtils'
 
 describe('#Routes test suite', () => {
+  const request = TestUtils.generateReadableStream(['some', 'filler', 'test', 'text'])
+  const response = TestUtils.generateWritableStream(() => {})
+
   const defaultParams = {
-    request: {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-      method: '',
-      body: {}
-    },
-    response: {
-      setHeader: jest.fn(),
-      writeHead: jest.fn(),
-      end: jest.fn()
-    },
+    request: Object.assign(request, {
+      ...routesDefaultParams.request
+    }),
+    response: Object.assign(response, {
+      ...routesDefaultParams.response
+    }),
     values: () => Object.values(defaultParams)
   }
+  
+  beforeEach(() => {
+    jest
+      .spyOn(logger, 'info')
+      .mockImplementation()
+  })
 
   describe('#setSocketInstance', () => {
     test('should store io instance', () => {
@@ -121,6 +134,38 @@ describe('#Routes test suite', () => {
 
       expect(params.response.writeHead).toHaveBeenCalledWith(200)
       expect(params.response.end).toHaveBeenCalledWith(JSON.stringify(fileStatusesMock))
+    })
+  })
+  
+  describe('#post', () => {
+    test('should validate post route workflow', async () => {
+      const routes = new Routes('/tmp')
+
+      const params = {
+        ...defaultParams
+      }
+
+      params.request.method = 'POST'
+      params.request.url = '?socketId=10'
+
+      jest
+        .spyOn(
+          UploadHandler.prototype,
+          UploadHandler.prototype.registerEvents.name
+        )
+        .mockImplementation((headers, onFinish) => {
+          const writable = TestUtils.generateWritableStream(() => {})
+
+          writable.on('finish', onFinish)
+
+          return writable
+        })
+
+      await routes.handler(...params.values())
+
+      expect(UploadHandler.prototype.registerEvents).toHaveBeenCalled()
+      expect(params.response.writeHead).toHaveBeenCalledWith(200)
+      expect(params.response.end).toHaveBeenCalledWith(JSON.stringify({ result: 'Files uploaded with success!' }))
     })
   })
 

@@ -1,6 +1,6 @@
 import { describe, test, expect, jest } from '@jest/globals'
 import fs from 'fs'
-import FileHelper from '../../src/fileHelper'
+import FileHelper from '../../src/helpers/fileHelper'
 
 describe('#FileHelper', () => {
 
