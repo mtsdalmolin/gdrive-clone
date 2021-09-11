@@ -225,6 +225,6 @@ input[type=search]::placeholder {
 .drop-area.highlight {
   border-color: purple;
 } 
-#fileElem {
+#file-elem {
   display: none;
 }
